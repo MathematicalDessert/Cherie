@@ -1,8 +1,8 @@
 /*
- * File Name: lex_state.h
+ * File Name: lexer.h
  * Author(s): P. Kamara
  *
- * Object containing current state of lexer.
+ * Lexer.
  */
 
 #pragma once
@@ -28,7 +28,7 @@ namespace cherie::compiler
         std::wstring source_; // source to lex
 
         [[nodiscard]] bool is_end_of_source(size_t ptr) const;
-        wchar_t peek();
+        [[nodiscard]] wchar_t peek() const;
         wchar_t get(bool skip_whitespace = false, bool clear_whitespace = false);
 		
         [[nodiscard]] std::wstring read_string();

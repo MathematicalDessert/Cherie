@@ -1,17 +1,20 @@
 #include <iostream>
-#include <compilation/lexer/lexer.h>
+#include <compilation/lexer.h>
 
 int main()
 {
 	const auto lexer = new cherie::compiler::lexer(std::wstring(LR"(
-	a = 2;
-	print(a - 4);
+fn hello(a: int) -> ([text] string, [random]? int) {
+	return "World!", a;
+}
+
+print("Hello " + hello(0).text);
 	)"));
 
-	cherie::compiler::token_type token = lexer->next_token();
+	auto token = lexer->next_token();
 	while(token != cherie::compiler::token_type::EOF)
 	{
-		printf("%d\n", token);
+		printf("[ID: %d] %s\n", token, cherie::compiler::get_token_str(token));
 		token = lexer->next_token();
 	}
 }

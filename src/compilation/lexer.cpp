@@ -1,13 +1,13 @@
 /*
- * File Name: lex_state.cpp
+ * File Name: lexer.h
  * Author(s): P. Kamara
  *
- * Object containing current state of lexer.
+ * Lexer.
  */
 
 #include <cwctype>
 #include "exceptions.h"
-#include "compilation/lexer/lexer.h"
+#include "compilation/lexer.h"
 
 namespace cherie::compiler
 {
@@ -16,7 +16,7 @@ namespace cherie::compiler
 		return source_.length() <= 0 || ptr >= source_.length();
 	}
 	
-	wchar_t lexer::peek()
+	wchar_t lexer::peek() const
 	{
 		return stream_->peek();
 	}
@@ -239,6 +239,11 @@ namespace cherie::compiler
 					if (symbol == '-') return_type = token_type::DECREMENT;
 					break;
 				}
+				case '>':
+				{
+					if (symbol == '-') return_type = token_type::ARROW;
+					break;
+				}
 				default: break;
 			}
 			
@@ -266,6 +271,9 @@ namespace cherie::compiler
 			case ',': return token_type::COMMA;
 			case ':': return token_type::COLON;
 			case ';': return token_type::SEMICOLON;
+			case '?': return token_type::QUESTION_MARK;
+			case '!': return token_type::EXCLAIMATION_MARK;
+			case '.': return token_type::DOT;
 			default: lexer_error("unknown symbol '%s' on line %d, column %d", symbol, line_,
 				column_);
 		}

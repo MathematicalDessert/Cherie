@@ -13,14 +13,14 @@
 
 namespace cherie
 {
-	struct lexer_exception
+	struct lexer_exception final
 		: std::exception
 	{
 		explicit lexer_exception(const std::string& what)
 			: std::exception(what.c_str()) {}
 	};
 
-	struct parser_exception
+	struct parser_exception final
 		: std::exception
 	{
 		explicit parser_exception(const std::string& what)
@@ -28,7 +28,7 @@ namespace cherie
 	};
 
 	template <typename... Args>
-	void lexer_error(std::string format, Args... args)
+	void lexer_error(const std::string& format, Args... args)
 	{
 		char str[_MAX_PATH];
 		sprintf_s(str, format.c_str(), args...);
