@@ -6,6 +6,7 @@
  */
 
 #include <cwctype>
+#include <sstream>
 #include "exceptions.h"
 #include "compilation/lexer.h"
 
@@ -16,12 +17,12 @@ namespace cherie::compiler
 		return source_.length() <= 0 || ptr >= source_.length();
 	}
 	
-	wchar_t lexer::peek() const
+	types::che_char lexer::peek() const
 	{
 		return stream_->peek();
 	}
 
-	wchar_t lexer::get(const bool skip_whitespace, const bool clear_whitespace)
+	types::che_char lexer::get(const bool skip_whitespace, const bool clear_whitespace)
 	{
 		if (skip_whitespace)
 		{
@@ -31,7 +32,7 @@ namespace cherie::compiler
 			}
 		}
 
-		const wchar_t next_character = stream_->get();
+		const types::che_char next_character = stream_->get();
 		if (next_character == '\n')
 		{
 			line_++;
@@ -49,7 +50,7 @@ namespace cherie::compiler
 		return next_character;
 	}
 
-	std::wstring lexer::read_string()
+	types::string lexer::read_string()
 	{
 		auto str = std::move(current_lexeme_);
 		discard();
@@ -119,7 +120,7 @@ namespace cherie::compiler
 	{
 		if (peek() == '"')
 		{
-			token_reference = std::wstring();
+			token_reference = types::string();
 			return get_and_discard();
 		}
 		
@@ -151,7 +152,7 @@ namespace cherie::compiler
 		}
 	}
 
-	void lexer::tokenize_number_literal(token& token_reference, const wchar_t first_digit)
+	void lexer::tokenize_number_literal(token& token_reference, const types::che_char first_digit)
 	{
 		auto is_floating_point_number = false;
 		const auto is_hex = first_digit == '0' && peek() == 'x';
@@ -210,7 +211,7 @@ namespace cherie::compiler
 		}
 	}
 
-	token_type lexer::tokenize_symbol(const wchar_t symbol)
+	token_type lexer::tokenize_symbol(const types::che_char symbol)
 	{
 		auto return_type = token_type::NONE;
 		if (const auto next_atom = peek(); next_atom != eof && std::iswpunct(next_atom))
@@ -280,12 +281,12 @@ namespace cherie::compiler
 		return token_type::NONE;
 	}
 
-	bool is_not_identifier(wchar_t atom)
+	bool is_not_identifier(types::che_char atom)
 	{
 		return atom != lexer::eof && (std::iswspace(atom) || !std::iswalnum(atom)) && atom != '_';
 	}
 	
-	token_type lexer::tokenize_identifier_or_keyword(token& token_reference, wchar_t first_character)
+	token_type lexer::tokenize_identifier_or_keyword(token& token_reference, types::che_char first_character)
 	{
 		auto can_be_keyword = first_character != '_';
 
@@ -296,18 +297,11 @@ namespace cherie::compiler
 			return token_type::IDENTIFIER;
 		}
 
-		std::wstring test_string;
+		types::string test_string;
 		test_string += first_character;
 		
 		while (const auto atom = get())
-		{
-			if (is_not_identifier(peek()))
-			{
-				const auto identifier = read_string();
-				token_reference = identifier;
-				return token_type::IDENTIFIER;
-			}
-			
+		{			
 			if (can_be_keyword)
 			{
 				if (atom == '_')
@@ -327,6 +321,13 @@ namespace cherie::compiler
 					}
 					can_be_keyword = false;
 				}
+			}
+
+			if (is_not_identifier(peek()))
+			{
+				const auto identifier = read_string();
+				token_reference = identifier;
+				return token_type::IDENTIFIER;
 			}
 		}
 		return token_type::NONE;
@@ -384,11 +385,13 @@ namespace cherie::compiler
 	token_type lexer::next_token()
 	{
 		current_token_ = std::monostate();
-		if (peeked_token_type_ != token_type::NONE)
+		auto peeked_type = peeked_token_type_;
+		if (peeked_type != token_type::NONE)
 		{
 			current_token_ = peeked_token_; // move lookahead into current
 			peeked_token_ = std::monostate();
-			return peeked_token_type_;
+			peeked_token_type_ = token_type::NONE;
+			return peeked_type;
 		}
 		return tokenize(current_token_);
 	}
@@ -405,9 +408,9 @@ namespace cherie::compiler
 		return token_type::NONE;
 	}
 
-	lexer::lexer(const std::wstring source)
+	lexer::lexer(const types::string source)
 		: source_(source)
 	{
-		stream_ = std::make_unique<std::wstringstream>(source);
+		stream_ = std::make_unique<types::stringstream>(source);
 	}
 }

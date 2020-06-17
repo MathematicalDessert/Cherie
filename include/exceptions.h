@@ -34,4 +34,12 @@ namespace cherie
 		sprintf_s(str, format.c_str(), args...);
 		throw lexer_exception(str);
 	}
+
+	template <typename... Args>
+	void parser_error(const std::string& format, Args... args)
+	{
+		char str[_MAX_PATH];
+		sprintf_s(str, format.c_str(), args...);
+		throw parser_exception(str);
+	}
 }
