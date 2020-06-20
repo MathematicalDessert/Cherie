@@ -26,6 +26,9 @@ namespace cherie
         using stringstream = std::stringstream;
         using che_char = char;
 #define CHE_STR(x) x
+		
+        using integer = long long;
+        using floating_point = long double;
 	}
 #endif
 }

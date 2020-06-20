@@ -11,36 +11,10 @@
 #include <variant>
 #include <array>
 #include "conf.h"
-
-#undef EOF // included from stdio.h, fucking stupid.
+#include "definitions.h"
 
 namespace cherie::compiler
 {
-    enum class token_type
-    {
-    	NONE,
-		EOF,
-    	IDENTIFIER,
-        LITERAL,
-    	/* Keywords */
-    	LET, CONST,
-    	FUNCTION, WHILE, IF,
-    	AND, OR, NOT,
-    	/* Symbols */
-    	ASSIGN, ADD_ASSIGN, SUBTRACT_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN,
-    	EQUALS, ADD, SUBTRACT, MULTIPLY, DIVIDE,
-    	INCREMENT, DECREMENT,
-
-        OPEN_PARENTHESIS, CLOSE_PARENTHESIS,
-        OPEN_BRACE, CLOSE_BRACE,
-        OPEN_BRACKET, CLOSE_BRACKET,
-
-        QUESTION_MARK, EXCLAIMATION_MARK,
-        COMMA, COLON, SEMICOLON, DOT,
-    	ARROW,
-    	COUNT,
-    };
-
 	const std::array<const char*, static_cast<size_t>(token_type::COUNT)> token_strings = {
 		"None",
 		"EOF",
@@ -95,7 +69,11 @@ namespace cherie::compiler
     	{ CHE_STR("let"), token_type::LET },
     	{ CHE_STR("const"), token_type::CONST },
     	{ CHE_STR("fn"), token_type::FUNCTION },
+    	{ CHE_STR("true"), token_type::TRUE },
+    	{ CHE_STR("false"), token_type::FALSE },
+    	{ CHE_STR("string"), token_type::TYPE_STRING },
+    	{ CHE_STR("number"), token_type::TYPE_NUMBER },
     };
 
-	typedef std::variant<std::monostate, long long, long double, types::che_char, types::string> token;
+	typedef std::variant<std::monostate, bool, types::integer, types::floating_point, types::che_char, types::string> token;
 }

@@ -273,7 +273,7 @@ namespace cherie::compiler
 			case ':': return token_type::COLON;
 			case ';': return token_type::SEMICOLON;
 			case '?': return token_type::QUESTION_MARK;
-			case '!': return token_type::EXCLAIMATION_MARK;
+			case '!': return token_type::EXCLAMATION_MARK;
 			case '.': return token_type::DOT;
 			default: lexer_error("unknown symbol '%s' on line %d, column %d", symbol, line_,
 				column_);
@@ -314,7 +314,7 @@ namespace cherie::compiler
 				if (const auto reserved_keyword_pair = keyword_map.find(test_string);
 					reserved_keyword_pair != keyword_map.end())
 				{
-					if (std::iswspace(peek()))
+					if (std::iswspace(peek()) || std::iswpunct(peek()))
 					{
 						discard();
 						return reserved_keyword_pair->second;

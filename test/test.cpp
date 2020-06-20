@@ -1,7 +1,10 @@
 #include <iostream>
 #include <compilation/lexer.h>
 
+
+#include "state.h"
 #include "compilation/parser.h"
+#include "vm/instruction.h"
 
 int main()
 {
@@ -13,17 +16,31 @@ fn hello(a: int) -> ([text] string, [random]? int) {
 print("Hello " + hello(0).text);
 	)"));*/
 
-	auto lexer = std::make_unique<cherie::compiler::lexer>(R"(
-/*fn hello()
-{
-	print("World!");
-}*/
-fn hello() {}
-print("Hello ")
-hello()
-	)");
+	std::vector<cherie::vm::instruction> instrs = {
+		cherie::vm::instruction(cherie::vm::opcode::nop),
+		cherie::vm::instruction(cherie::vm::opcode::load, 0, 15),
+		cherie::vm::instruction(cherie::vm::opcode::load, 1, 9999999999),
+		cherie::vm::instruction(cherie::vm::opcode::push, 1),
+		cherie::vm::instruction(cherie::vm::opcode::pop, 0),
+		cherie::vm::instruction(cherie::vm::opcode::halt),
+	};
+	
+	auto state = std::make_unique<cherie::state_raw>();
+	state->program = instrs;
+	state->execute();
+	
+	try
+	{
+		auto lexer = std::make_unique<cherie::compiler::lexer>(R"(
+			print(true, false)
+		)");
 
-	auto x = cherie::compiler::parse(std::move(lexer));
+		auto x = cherie::compiler::parse(lexer.get());
+	}
+	catch (std::exception& exception)
+	{
+		std::cout << exception.what() << std::endl;
+	}
 	/*auto token = lexer->next_token();
 	while(token != cherie::compiler::token_type::EOF)
 	{

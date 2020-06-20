@@ -12,16 +12,10 @@
 
 namespace cherie::compiler::ast
 {
-	struct node
-	{
-		
-	};
+	struct node {};
 
 	struct statement
-		: node
-	{
-		
-	};
+		: node {};
 
 	struct statement_list
 		: node
@@ -47,10 +41,22 @@ namespace cherie::compiler::ast
 	struct number_literal
 		: expression
 	{
-		explicit number_literal(long long value)
+		explicit number_literal(types::integer value)
 			: value(value) {}
 
-		std::variant<long long> value;
+		explicit number_literal(types::floating_point value)
+			: value(value) {}
+
+		std::variant<types::integer, types::floating_point> value;
+	};
+
+	struct boolean_literal
+		: expression
+	{
+		explicit boolean_literal(const bool value)
+			: value(value) {}
+		
+		bool value;
 	};
 	
 	struct expression_list
@@ -63,7 +69,7 @@ namespace cherie::compiler::ast
 		: expression
 	{
 		token_type operation;
-		std::unique_ptr<expression> expression_data;
+		std::unique_ptr<expression> rhs;
 	};
 
 	struct binary_expression
@@ -84,6 +90,12 @@ namespace cherie::compiler::ast
 		std::vector<std::unique_ptr<expression>> arguments;
 	};
 
+	struct parameter_definition
+	{
+		int type;
+		types::string name;
+	};
+	
 	struct function_definition
 		: statement_list
 	{
