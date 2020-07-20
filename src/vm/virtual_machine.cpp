@@ -20,9 +20,14 @@ namespace cherie::vm
 				{
 					break;
 				}
-				case opcode::push: /* push value from register onto stack */
+				case opcode::pushr: /* push value from register onto stack */
 				{
 					stack.push_back(registers.gpr[next_instruction.c]);
+					break;
+				}
+				case opcode::pushi: /* push immediate value */
+				{
+					stack.push_back(next_instruction.a);
 					break;
 				}
 				case opcode::pop: /* push value from stack into a register*/
@@ -36,9 +41,19 @@ namespace cherie::vm
 					registers.gpr[next_instruction.c] = next_instruction.a;
 					break;
 				}
-				case opcode::add: /* R(n) = R(n) + R(z) */
+				case opcode::addrs: /* R(n) = R(n) + R(z) */
 				{
 					//registers.gpr[next_instruction.c] = registers.gpr[next_instruction.bs] + next_instruction.as;
+					break;
+				}
+				case opcode::adds:
+				{
+					if (stack.empty()) stack.push_back(0); // consider this to be a zero'd value
+					if (stack.size() == 1) continue; // This could ALSO be optimised away, because it's essentially NOP???
+
+					const auto a = stack.back();
+					stack.pop_back();
+					stack[stack.size() - 1] = stack.back() + a;
 					break;
 				}
 				case opcode::addr:

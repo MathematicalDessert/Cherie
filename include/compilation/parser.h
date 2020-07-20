@@ -12,5 +12,6 @@
 
 namespace cherie::compiler
 {
+    std::unique_ptr<ast::expression> parse_expression(lexer* lexer);
     ast::program parse(lexer* lexer);
 }

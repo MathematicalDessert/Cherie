@@ -40,6 +40,30 @@ namespace cherie
             ARROW,
             COUNT,
         };
+
+        const std::unordered_map<token_type, const char*> operator_name = {
+		    { token_type::ADD, "+" },
+		    { token_type::SUBTRACT, "-" },
+		    { token_type::MULTIPLY, "*" },
+		    { token_type::DIVIDE, "/" },
+        };
+		
+        const std::unordered_map<token_type, int> operator_precedence = {
+			{ token_type::ADD, 1 },
+            { token_type::SUBTRACT, 1 },
+            { token_type::MULTIPLY, 2 },
+            { token_type::DIVIDE, 2 },
+        };
+
+		inline int get_op_binding_power(const token_type type)
+		{
+            return operator_precedence.at(type);
+		}
+
+		inline const char* get_op_symbol(const token_type type)
+		{
+            return operator_name.at(type);
+		}
 	}
 	
 	enum class type

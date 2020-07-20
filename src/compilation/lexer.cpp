@@ -12,7 +12,7 @@
 
 namespace cherie::compiler
 {
-	bool lexer::is_end_of_source(size_t ptr) const
+	bool lexer::is_end_of_source(const size_t ptr) const
 	{
 		return source_.length() <= 0 || ptr >= source_.length();
 	}
@@ -385,7 +385,7 @@ namespace cherie::compiler
 	token_type lexer::next_token()
 	{
 		current_token_ = std::monostate();
-		auto peeked_type = peeked_token_type_;
+		const auto peeked_type = peeked_token_type_;
 		if (peeked_type != token_type::NONE)
 		{
 			current_token_ = peeked_token_; // move lookahead into current
@@ -403,6 +403,7 @@ namespace cherie::compiler
 			peeked_token_type_ = tokenize(peeked_token_);
 			return peeked_token_type_;
 		}
+		return peeked_token_type_;
 		peeked_token_ = std::monostate();
 		lexer_error("attempt to peek token, current peeked token is not cleared");
 		return token_type::NONE;
