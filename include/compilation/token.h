@@ -71,6 +71,7 @@ namespace cherie::compiler
     	{ CHE_STR("fn"), token_type::FUNCTION },
     	{ CHE_STR("true"), token_type::TRUE },
     	{ CHE_STR("false"), token_type::FALSE },
+		{ CHE_STR("return"), token_type::RETURN },
     	{ CHE_STR("string"), token_type::TYPE_STRING },
     	{ CHE_STR("number"), token_type::TYPE_NUMBER },
     };

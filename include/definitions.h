@@ -21,7 +21,7 @@ namespace cherie
             LITERAL,
             /* Keywords */
             LET, CONST,
-            FUNCTION, WHILE, IF,
+            FUNCTION, WHILE, IF, RETURN,
             AND, OR, NOT,
             TRUE, FALSE,
             /* Symbols */

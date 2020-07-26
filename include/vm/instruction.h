@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace cherie::vm
 {
 #pragma pack(push, 1)
@@ -82,8 +84,23 @@ namespace cherie::vm
 	using int56_t = sized_bit_container<7, std::int64_t>;
 	static_assert(sizeof(int24_t) == 3);
 	static_assert(sizeof(int56_t) == 7);
+
+	struct i8
+	{
+		
+	};
 	
-	struct instruction
+	struct i16
+	{
+		
+	};
+	
+	struct i32
+	{
+		
+	};
+	
+	struct i64
 	{
 		union
 		{
@@ -111,20 +128,20 @@ namespace cherie::vm
 			uint64_t raw = 0;
 		};
 
-		explicit instruction() = default;
+		explicit i64() = default;
 		
-		explicit instruction(const opcode op)
+		explicit i64(const opcode op)
 			: op(op) {}
 
-		explicit instruction(const opcode op, const int56_t al)
+		explicit i64(const opcode op, const int56_t al)
 			: op(op), al(al) {}
 
-		explicit instruction(const opcode op, const int32_t a, const int24_t b)
+		explicit i64(const opcode op, const int32_t a, const int24_t b)
 			: op(op), a(a), b(b) {}
 
-		explicit instruction(const opcode op, const int32_t a, const int16_t bs, const int8_t c = 0)
+		explicit i64(const opcode op, const int32_t a, const int16_t bs, const int8_t c = 0)
 			: op(op), a(a), bs(bs), c(c) {}
 	};
-	static_assert(sizeof(instruction) == 8);
+	static_assert(sizeof(i64) == 8);
 }
 #pragma pack(pop)

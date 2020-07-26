@@ -26,7 +26,7 @@ namespace cherie::vm
 	//protected:
         
 	public:
-        std::vector<instruction> program;
+        std::vector<i64> program;
         void run();
 	};
 }

@@ -49,6 +49,9 @@ namespace cherie::compiler
         token_type next_token();
         token_type peek_token();
 
+        [[nodiscard]] size_t line() const { return line_;  }
+        [[nodiscard]] size_t column() const { return column_;  }
+
         [[nodiscard]] token token_value() const { return current_token_; }
         [[nodiscard]] token peeked_token_value() const { return peeked_token_; }
 

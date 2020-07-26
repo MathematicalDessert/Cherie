@@ -7,7 +7,6 @@
 
 #include "node.h"
 
-#include "test_visitor.h"
 
 namespace cherie::compiler::ast
 {

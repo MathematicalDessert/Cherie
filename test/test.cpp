@@ -4,7 +4,7 @@
 
 #include "state.h"
 #include "compilation/parser.h"
-#include "compilation/ast/test_visitor.h"
+#include "compilation/ast/visitors/print_visitor.h"
 #include "vm/instruction.h"
 
 template< typename T > std::array<std::byte, sizeof(T) >  to_bytes(const T& object)
@@ -39,14 +39,14 @@ fn hello(a: int) -> ([text] string, [random]? int) {
 print("Hello " + hello(0).text);
 	)"));*/
 
-	std::vector<cherie::vm::instruction> instrs = {
+	std::vector<cherie::vm::i64> instrs = {
 		//cherie::vm::instruction(cherie::vm::opcode::nop, 0, 0, 0),
 		//cherie::vm::instruction(cherie::vm::opcode::load, 15, 0, 0),
 		//cherie::vm::instruction(cherie::vm::opcode::load, -2, 0, 1),
-		cherie::vm::instruction(cherie::vm::opcode::pushi, 30, 0, 0),
-		cherie::vm::instruction(cherie::vm::opcode::adds, 0, 0, 0),
-		cherie::vm::instruction(cherie::vm::opcode::pop, 0, 0, 1),
-		cherie::vm::instruction(cherie::vm::opcode::halt, 0, 0, 0),
+		cherie::vm::i64(cherie::vm::opcode::pushi, 30, 0, 0),
+		cherie::vm::i64(cherie::vm::opcode::adds, 0, 0, 0),
+		cherie::vm::i64(cherie::vm::opcode::pop, 0, 0, 1),
+		cherie::vm::i64(cherie::vm::opcode::halt, 0, 0, 0),
 	};
 
 	/*auto state = std::make_unique<cherie::state_raw>();
@@ -55,15 +55,16 @@ print("Hello " + hello(0).text);
 
 	std::cout << sizeof(cherie::vm::instruction) << std::endl;
 	*/
+	// 2 + (2 + 1) / 3 * 2 - a
 	try
 	{
 		auto lexer = std::make_unique<cherie::compiler::lexer>(R"(
-			2 + 2 + 1 / 3 * 2 - a
+			print("Hello World!", 1, 2, true);
 		)");
 
 		auto x = parse(lexer.get());
-		auto vis = new cherie::compiler::ast::test_visitor();
-		x.accept(vis);
+		auto vis = new cherie::compiler::ast::print_visitor();
+		x->accept(vis);
 	}
 	catch (std::exception& exception)
 	{

@@ -13,7 +13,7 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-file(GLOB_RECURSE CHERIE_SRC "include/*.h" "src/*.cpp")
+file(GLOB_RECURSE CHERIE_SRC "cpp.hint" "include/*.h" "src/*.cpp")
 add_library (Cherie STATIC ${CHERIE_SRC})
 target_include_directories(Cherie PUBLIC "include/")
 

@@ -1,0 +1,7 @@
+// Hint files help the Visual Studio IDE interpret Visual C++ identifiers
+// such as names of functions and macros.
+// For more information see https://go.microsoft.com/fwlink/?linkid=865984
+
+#define NODE_ACCEPT void accept(visitor* visitor) override { visitor->visit(this); }
+#define VIRTUAL_VISITOR(x) virtual void visit(x* node) = 0;
+#define FINAL_VISITOR(x) void visit(x* node) override
