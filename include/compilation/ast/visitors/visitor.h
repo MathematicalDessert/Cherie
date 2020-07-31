@@ -12,6 +12,9 @@
 
 namespace cherie::compiler::ast
 {
+	struct while_statement;
+	struct variable;
+	struct assignment_statement;
 	struct if_statement;
 	struct call_expression;
 	struct function_definition;
@@ -48,5 +51,8 @@ namespace cherie::compiler::ast
 		VIRTUAL_VISITOR(function_definition)
 		VIRTUAL_VISITOR(call_expression)
 		VIRTUAL_VISITOR(if_statement)
+		VIRTUAL_VISITOR(assignment_statement)
+		VIRTUAL_VISITOR(variable)
+		VIRTUAL_VISITOR(while_statement)
 	};
 }

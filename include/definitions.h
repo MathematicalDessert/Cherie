@@ -21,7 +21,7 @@ namespace cherie
             LITERAL,
             /* Keywords */
             LET, CONST,
-            FUNCTION, WHILE, IF, RETURN,
+            FUNCTION, WHILE, IF, ELSE, RETURN,
             AND, OR, NOT,
             TRUE, FALSE,
             /* Symbols */
@@ -42,10 +42,13 @@ namespace cherie
         };
 
         const std::unordered_map<token_type, const char*> operator_name = {
-		    { token_type::ADD, "+" },
-		    { token_type::SUBTRACT, "-" },
-		    { token_type::MULTIPLY, "*" },
-		    { token_type::DIVIDE, "/" },
+            { token_type::ADD, "+" },
+            { token_type::SUBTRACT, "-" },
+            { token_type::MULTIPLY, "*" },
+            { token_type::DIVIDE, "/" },
+            { token_type::CLOSE_PARENTHESIS, ")" },
+            { token_type::SEMICOLON, ";" },
+			{ token_type::EOF, "EOF" }
         };
 		
         const std::unordered_map<token_type, int> operator_precedence = {

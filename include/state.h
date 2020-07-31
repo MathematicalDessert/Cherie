@@ -8,8 +8,6 @@
 #pragma once
 
 #include <memory>
-#include <vector>
-#include "vm/instruction.h"
 #include "vm/virtual_machine.h"
 
 namespace cherie

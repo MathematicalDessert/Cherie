@@ -84,21 +84,6 @@ namespace cherie::vm
 	using int56_t = sized_bit_container<7, std::int64_t>;
 	static_assert(sizeof(int24_t) == 3);
 	static_assert(sizeof(int56_t) == 7);
-
-	struct i8
-	{
-		
-	};
-	
-	struct i16
-	{
-		
-	};
-	
-	struct i32
-	{
-		
-	};
 	
 	struct i64
 	{

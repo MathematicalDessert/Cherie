@@ -10,77 +10,59 @@
 
 namespace cherie::compiler
 {
-	void expect(lexer* lexer, const token_type type)
+	parser::parser(lexer* lexer)
+		: lexer_(lexer) {}
+
+	void parser::expect(const token_type type) const
 	{
-		if (lexer->next_token() != type)
+		if (const auto next_token = lexer_->next_token(); next_token != type)
 		{
-			parser_error("");
+			parser_error("expected '%s' but got '%s' on line %d, column %d", get_op_symbol(type), get_op_symbol(next_token), lexer_->line(), lexer_->column());
 		}
 	}
 
-	template<typename T>
-	T get_token_value(lexer* lexer)
+	ast::call_expression* parser::parse_call_expression()
 	{
-		const auto token_value = lexer->token_value();
-		if (!std::holds_alternative<T>(token_value))
-		{
-			parser_error("");
-		}
+		auto* expression = new ast::call_expression();
 
-		return std::get<T>(token_value);
-	}
-	
-	template<typename T>
-	T expect_and_get(lexer* lexer, const token_type type)
-	{
-		expect(lexer, type);
-		return get_token_value<T>(lexer);
-	}
-
-	ast::call_expression* parse_call_expression(lexer* lexer)
-	{
-		auto* call_expression = new ast::call_expression();
-
-		call_expression->function_name = std::get<types::string>(lexer->token_value());
-
-		expect(lexer, token_type::OPEN_PARENTHESIS);
-
-		if (lexer->peek_token() == token_type::CLOSE_PARENTHESIS)
-		{
-			lexer->next_token();
-			return call_expression;
-		}
-
-		call_expression->arguments.push_back(parse_expression(lexer));
-		while (lexer->peek_token() == token_type::COMMA)
-		{
-			lexer->next_token();
-			call_expression->arguments.push_back(parse_expression(lexer));
-		}
-		expect(lexer, token_type::CLOSE_PARENTHESIS);
+		expression->function_name = get_token_value<types::string>();
 		
-		return call_expression;
+		expect(token_type::OPEN_PARENTHESIS);
+		
+		if (lexer_->peek_token() == token_type::CLOSE_PARENTHESIS)
+		{
+			lexer_->next_token();
+			return expression;
+		}
+
+		expression->arguments.push_back(std::unique_ptr<ast::expression>(parse_expression()));
+		while (lexer_->peek_token() == token_type::COMMA)
+		{
+			lexer_->next_token();
+			expression->arguments.push_back(std::unique_ptr<ast::expression>(parse_expression()));
+		}
+		expect(token_type::CLOSE_PARENTHESIS);
+		
+		return expression;
 	}
-	
-	ast::primary_expression* parse_primary_expression(lexer* lexer)
+
+	ast::primary_expression* parser::parse_primary_expression()
 	{
-		switch (lexer->peek_token())
+		switch (lexer_->next_token())
 		{
 			case token_type::IDENTIFIER:
 			{
-				lexer->next_token();
-				if (lexer->peek_token() == token_type::OPEN_PARENTHESIS)
+				if (lexer_->peek_token() == token_type::OPEN_PARENTHESIS)
 				{
-					return parse_call_expression(lexer);
+					return parse_call_expression();
 				}
-				return new ast::string_literal(std::get<types::string>(lexer->token_value()));
+				return new ast::variable(std::get<types::string>(lexer_->token_value()));
 			}
-			case token_type::TRUE: lexer->next_token();  return new ast::boolean_literal(true);
-			case token_type::FALSE: lexer->next_token();  return new ast::boolean_literal(false);
+			case token_type::TRUE: return new ast::boolean_literal(true);
+			case token_type::FALSE:  return new ast::boolean_literal(false);
 			case token_type::LITERAL:
 			{
-				lexer->next_token();
-				const auto literal = lexer->token_value();
+				const auto literal = lexer_->token_value();
 				if (std::holds_alternative<types::string>(literal)) // string literal
 				{
 					return new ast::string_literal(std::get<types::string>(literal));
@@ -97,14 +79,19 @@ namespace cherie::compiler
 				}
 				break;
 			}
+			default:
+			{
+				break;
+			}
 		}
+		return nullptr;
 	}
 	
-	ast::multiplicative_expression* parse_multiplicative_expression(lexer* lexer)
+	ast::multiplicative_expression* parser::parse_multiplicative_expression()
 	{
-		auto* current_expression = parse_primary_expression(lexer);
+		auto* current_expression = parse_primary_expression();
 
-		auto next_peeked_token = lexer->peek_token();
+		auto next_peeked_token = lexer_->peek_token();
 		switch (next_peeked_token)
 		{
 			case token_type::MULTIPLY:
@@ -112,9 +99,9 @@ namespace cherie::compiler
 			{
 				while (next_peeked_token == token_type::MULTIPLY || next_peeked_token == token_type::DIVIDE)
 				{
-					const auto next_token = lexer->next_token(); // wouldn't evaluate, so this is a hack
-					current_expression = new ast::binary_expression(next_token, current_expression, parse_primary_expression(lexer));
-					next_peeked_token = lexer->peek_token();
+					const auto next_token = lexer_->next_token(); // wouldn't evaluate, so this is a hack
+					current_expression = new ast::binary_expression(next_token, current_expression, parse_primary_expression());
+					next_peeked_token = lexer_->peek_token();
 				}
 			}
 			default:
@@ -124,12 +111,12 @@ namespace cherie::compiler
 		}
 		return current_expression;
 	}
-	
-	std::unique_ptr<ast::additive_expression> parse_additive_expression(lexer* lexer, const int right_binding_power = 0)
+
+	ast::additive_expression* parser::parse_additive_expression()
 	{
-		auto* current_expression = parse_multiplicative_expression(lexer);
-		
-		auto next_peeked_token = lexer->peek_token();
+		auto* current_expression = parse_multiplicative_expression();
+
+		auto next_peeked_token = lexer_->peek_token();
 		switch (next_peeked_token)
 		{
 			case token_type::ADD:
@@ -137,131 +124,192 @@ namespace cherie::compiler
 			{
 				while (next_peeked_token == token_type::ADD || next_peeked_token == token_type::SUBTRACT)
 				{
-					const auto next_token = lexer->next_token(); // wouldn't evaluate, so this is a hack
-					current_expression = new ast::binary_expression(next_token, current_expression, parse_multiplicative_expression(lexer));
-					next_peeked_token = lexer->peek_token();
+					const auto next_token = lexer_->next_token(); // wouldn't evaluate, so this is a hack
+					current_expression = new ast::binary_expression(next_token, current_expression, parse_multiplicative_expression());
+					next_peeked_token = lexer_->peek_token();
 				}
+				break;
 			}
 			default:
 			{
 				break;
 			}
 		}
-		return std::unique_ptr<ast::additive_expression>(current_expression);
+		return current_expression;
+	}
+
+	ast::expression* parser::parse_expression()
+	{
+		if (lexer_->peek_token() == token_type::OPEN_PARENTHESIS)
+		{
+			expect(token_type::OPEN_PARENTHESIS);
+			auto* expression = parse_expression();
+			expect(token_type::CLOSE_PARENTHESIS);
+			return expression;
+		}
+		return parse_additive_expression();
+	}
+
+	ast::function_definition* parser::parse_function_definition()
+	{
+		auto* func_def = new ast::function_definition();
+
+		func_def->function_name = expect_and_get<types::string>(token_type::IDENTIFIER);
+		
+		expect(token_type::OPEN_PARENTHESIS);
+		expect(token_type::CLOSE_PARENTHESIS);
+
+		expect(token_type::OPEN_BRACE);
+
+		if (lexer_->peek_token() == token_type::CLOSE_BRACE)
+		{
+			return func_def;
+		}
+
+		func_def->body->statements.push_back(std::unique_ptr<ast::statement>(parse_statement()));
+		while (lexer_->next_token() != token_type::CLOSE_BRACE)
+		{
+			func_def->body->statements.push_back(std::unique_ptr<ast::statement>(parse_statement()));
+		}
+
+		expect(token_type::CLOSE_BRACKET);
+		
+		return func_def;
 	}
 	
-	/**
-	 * Had a long discussion about parsing expressions, and I've decided to go with the tried and
-	 * tested method of pratt parsing. The rest of the parser will still be recursive descent!
-	 */
-	std::unique_ptr<ast::expression> parse_expression(lexer* lexer, const int right_binding_power)
+	ast::statement_block* parser::parse_statement_block()
 	{
-		switch(lexer->peek_token())
+		expect(token_type::OPEN_BRACE);
+		
+		auto* statement_block = new ast::statement_block();
+
+		while (lexer_->peek_token() != token_type::CLOSE_BRACE)
 		{
-			case token_type::OPEN_PARENTHESIS: /* ( expression ) */
-			{
-				lexer->next_token();
-				auto expression = parse_expression(lexer, right_binding_power);
-				expect(lexer, token_type::CLOSE_PARENTHESIS);
-				return expression;
-			}			
-			default:
-			{
-				return parse_additive_expression(lexer);
-			}
+			auto new_statement = std::unique_ptr<ast::statement>(parse_statement());
+			statement_block->statements.emplace_back(std::move(new_statement));
 		}
+
+		expect(token_type::CLOSE_BRACE);
+		return statement_block;
 	}
 
-	ast::if_statement* parse_if_statement(lexer* lexer)
+	ast::assignment_statement* parser::parse_assignment_statement()
 	{
-		lexer->next_token();
-		auto* stmt = new ast::if_statement();
+		auto* statement = new ast::assignment_statement();
 
-		expect(lexer, token_type::OPEN_PARENTHESIS);
-		stmt->condition = parse_expression(lexer);
-		expect(lexer, token_type::CLOSE_PARENTHESIS);
-
-		expect(lexer, token_type::OPEN_BRACE);
-		stmt->main_block = std::make_unique<ast::statement_block>();
-		while (lexer->peek_token() != token_type::CLOSE_BRACE)
+		if (lexer_->next_token() == token_type::CONST)
 		{
-			stmt->main_block->statements.push_back(parse_statement(lexer));
-		}
-		expect(lexer, token_type::CLOSE_BRACE);
-		
-		return stmt;
-	}
-
-	std::unique_ptr<ast::statement> parse_statement(lexer* lexer)
-	{
-		switch (lexer->peek_token())
-		{
-		case token_type::LET:
-		case token_type::CONST:
-		{
-			
-			break;
-		}
-		case token_type::IF:
-			{
-				return std::unique_ptr<ast::statement>(parse_if_statement(lexer));
-			}
-		default:
-			{
-				auto x = parse_expression(lexer, 0);
-				expect(lexer, token_type::SEMICOLON);
-				return x;
-			}
-		}
-	}
-
-	ast::function_definition* parse_function_definition(lexer* lexer)
-	{
-		auto* function = new ast::function_definition();
-
-		function->function_name = expect_and_get<std::string>(lexer, token_type::IDENTIFIER);
-		expect(lexer, token_type::OPEN_PARENTHESIS);
-		expect(lexer, token_type::CLOSE_PARENTHESIS);
-
-		expect(lexer, token_type::OPEN_BRACE);
-		
-		if (lexer->peek_token() == token_type::CLOSE_BRACE)
-		{
-			return function;
-		}
-
-		function->body->statements.push_back(parse_statement(lexer));
-		while (lexer->next_token() != token_type::CLOSE_BRACE)
-		{
-			function->body->statements.push_back(parse_statement(lexer));
+			statement->immutable = true;
 		}
 		
-		expect(lexer, token_type::CLOSE_BRACKET);
+		statement->variable_name = expect_and_get<types::string>(token_type::IDENTIFIER);
+		expect(token_type::EQUALS);
+		statement->value = std::unique_ptr<ast::expression>(parse_expression());
 		
-		return function;
+		return statement;
 	}
 	
-	ast::program* parse(lexer* lexer)
+	ast::while_statement* parser::parse_while_statement()
 	{
-		auto* program_node = new ast::program();
+		expect(token_type::WHILE);
+
+		auto* new_statement = new ast::while_statement();
+
+		expect(token_type::OPEN_PARENTHESIS);
+		new_statement->condition = std::unique_ptr<ast::expression>(parse_expression());
+		expect(token_type::CLOSE_PARENTHESIS);
+
+		new_statement->block = std::unique_ptr<ast::statement_block>(parse_statement_block());
 		
-		auto next_token = lexer->peek_token();
-		while (next_token != token_type::EOF)
+		return new_statement;
+	}
+
+	ast::if_statement* parser::parse_if_statement()
+	{
+		expect(token_type::IF);
+		
+		auto* new_statement = new ast::if_statement();
+
+		expect(token_type::OPEN_PARENTHESIS);
+		new_statement->condition = std::unique_ptr<ast::expression>(parse_expression());
+		expect(token_type::CLOSE_PARENTHESIS);
+
+		new_statement->main_block = std::unique_ptr<ast::statement_block>(parse_statement_block());
+
+		while (lexer_->peek_token() == token_type::ELSE)
 		{
-			if (next_token == token_type::FUNCTION)
+			lexer_->next_token();
+			if (lexer_->peek_token() == token_type::IF) // else if
 			{
-				lexer->next_token();
-				auto func_def = std::unique_ptr<ast::function_definition>(parse_function_definition(lexer));
-				program_node->body.emplace_back(std::move(func_def));
+				lexer_->next_token();
+				//new_statement->elseif_blocks.insert(std::make_pair(parse_expression(), parse_statement_block()));
 			}
 			else
 			{
-				auto statement = parse_statement(lexer);
-				program_node->body.emplace_back(std::move(statement));
+				new_statement->else_block = std::unique_ptr<ast::statement_block>(parse_statement_block());
+				break;
 			}
-			next_token = lexer->peek_token();
+		}
+		
+		return new_statement;
+	}
+	
+	ast::statement* parser::parse_statement()
+	{
+		ast::statement* new_statement = nullptr;
+		
+		switch(lexer_->peek_token())
+		{
+			case token_type::LET:
+			case token_type::CONST:
+			{
+				new_statement = parse_assignment_statement();
+				expect(token_type::SEMICOLON);
+				break;
+			}
+			case token_type::IF: // If Statement
+			{
+				new_statement = parse_if_statement();
+				break;
+			}
+			case token_type::WHILE:
+			{
+				new_statement = parse_while_statement();
+				break;
+			}
+			default:
+			{
+				new_statement = parse_expression();
+				expect(token_type::SEMICOLON);
+				break;
+			}
 		}
 
+		return new_statement;
+	}
+
+	ast::program* parser::parse()
+	{
+		auto* program_node = new ast::program();
+
+		auto next_token = lexer_->peek_token();
+		while (next_token != token_type::EOF)
+		{
+			if (next_token == token_type::FUNCTION) // Function Definition
+			{
+				lexer_->next_token();
+				auto new_function = std::unique_ptr<ast::function_definition>(parse_function_definition());
+				program_node->body.emplace_back(std::move(new_function));
+			}
+			else // Any other generic statement
+			{
+				auto new_statement = std::unique_ptr<ast::statement>(parse_statement());
+				program_node->body.emplace_back(std::move(new_statement));
+			}
+			
+			next_token = lexer_->peek_token();
+		}
+		
 		return program_node;
 	}
 }

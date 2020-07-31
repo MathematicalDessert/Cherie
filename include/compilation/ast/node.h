@@ -82,6 +82,26 @@ namespace cherie::compiler::ast
 		std::unique_ptr<statement_block> else_block;
 	};
 
+	struct while_statement final
+		: statement
+	{
+		NODE_ACCEPT
+
+		std::unique_ptr<expression> condition;
+		std::unique_ptr<statement_block> block;
+	};
+
+	struct assignment_statement final
+		: statement
+	{
+		NODE_ACCEPT
+
+		bool immutable = false;
+		types::string variable_name;
+		// Type one day
+		std::unique_ptr<expression> value;
+	};
+	
 	struct expression
 		: statement
 	{
@@ -120,7 +140,7 @@ namespace cherie::compiler::ast
 	{
 		NODE_ACCEPT
 		
-		std::string function_name;
+		types::string function_name;
 		std::vector<std::unique_ptr<expression>> arguments;
 	};
 	
@@ -138,6 +158,17 @@ namespace cherie::compiler::ast
 		token_type operation;
 		std::unique_ptr<primary_expression> lhs;
 		std::unique_ptr<primary_expression> rhs;
+	};
+
+	struct variable
+		: primary_expression
+	{
+		explicit variable(types::string value)
+			: value(std::move(value)) {}
+		
+		NODE_ACCEPT
+
+		types::string value;
 	};
 	
 	struct string_literal

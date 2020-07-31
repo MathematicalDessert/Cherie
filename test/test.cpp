@@ -7,28 +7,6 @@
 #include "compilation/ast/visitors/print_visitor.h"
 #include "vm/instruction.h"
 
-template< typename T > std::array<std::byte, sizeof(T) >  to_bytes(const T& object)
-{
-	std::array< std::byte, sizeof(T) > bytes;
-
-	auto begin = reinterpret_cast<const std::byte*>(std::addressof(object));
-	auto end = begin + sizeof(T);
-	std::copy(begin, end, std::begin(bytes));
-
-	return bytes;
-}
-
-template< typename T >
-T& from_bytes(const std::array<std::byte, sizeof(T) >& bytes, T& object)
-{
-	static_assert(std::is_trivially_copyable<T>::value, "not a TriviallyCopyable type");
-
-	auto begin_object = reinterpret_cast<std::byte*>(std::addressof(object));
-	std::copy(std::begin(bytes), std::end(bytes), begin_object);
-
-	return object;
-}
-
 int main()
 {
 	/*auto lexer = std::make_unique<cherie::compiler::lexer>(std::wstring(LR"(
@@ -39,16 +17,6 @@ fn hello(a: int) -> ([text] string, [random]? int) {
 print("Hello " + hello(0).text);
 	)"));*/
 
-	std::vector<cherie::vm::i64> instrs = {
-		//cherie::vm::instruction(cherie::vm::opcode::nop, 0, 0, 0),
-		//cherie::vm::instruction(cherie::vm::opcode::load, 15, 0, 0),
-		//cherie::vm::instruction(cherie::vm::opcode::load, -2, 0, 1),
-		cherie::vm::i64(cherie::vm::opcode::pushi, 30, 0, 0),
-		cherie::vm::i64(cherie::vm::opcode::adds, 0, 0, 0),
-		cherie::vm::i64(cherie::vm::opcode::pop, 0, 0, 1),
-		cherie::vm::i64(cherie::vm::opcode::halt, 0, 0, 0),
-	};
-
 	/*auto state = std::make_unique<cherie::state_raw>();
 	state->program = instrs;
 	state->run();
@@ -58,13 +26,14 @@ print("Hello " + hello(0).text);
 	// 2 + (2 + 1) / 3 * 2 - a
 	try
 	{
-		auto lexer = std::make_unique<cherie::compiler::lexer>(R"(
-			print("Hello World!", 1, 2, true);
+		const auto lexer = std::make_unique<cherie::compiler::lexer>(R"(
+			let a = 1;
+			print(a + 2);
 		)");
 
-		auto x = parse(lexer.get());
-		auto vis = new cherie::compiler::ast::print_visitor();
-		x->accept(vis);
+		auto* p = new cherie::compiler::parser(lexer.get());
+		auto* vis = new cherie::compiler::ast::print_visitor();
+		p->parse()->accept(vis);
 	}
 	catch (std::exception& exception)
 	{

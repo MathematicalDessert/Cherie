@@ -42,7 +42,11 @@ namespace cherie::compiler::ast
 			}
 		}
 
-
+		FINAL_VISITOR(variable)
+		{
+			printf("%s", node->value.c_str());
+		}
+		
 		FINAL_VISITOR(string_literal)
 		{
 			printf("\"%s\"", node->value.c_str());
@@ -120,6 +124,27 @@ namespace cherie::compiler::ast
 			node->condition->accept(this);
 			printf(") {\n");
 			for (const auto& stmt : node->main_block->statements)
+			{
+				printf("    ");
+				stmt->accept(this);
+				printf("\n");
+			}
+			printf("}");
+		}
+
+		FINAL_VISITOR(assignment_statement)
+		{
+			printf("let %s = ", node->variable_name.c_str());
+			node->value->accept(this);
+			printf("\n");
+		}
+
+		FINAL_VISITOR(while_statement)
+		{
+			printf("while (");
+			node->condition->accept(this);
+			printf(") {\n");
+			for (const auto& stmt : node->block->statements)
 			{
 				printf("    ");
 				stmt->accept(this);
